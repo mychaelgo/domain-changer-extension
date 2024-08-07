@@ -3,8 +3,10 @@
   "name": "Domain Changer",
   "description": "Simple Domain Changer",
   "version": "1.0",
-  "browser_action": {
-    "default_icon": "images/icon128.png",
+  "action": {
+    "default_icon": {
+      "16": "images/icon16.png"
+    },
     "default_popup": "popup.html"
   },
   "icons": {
