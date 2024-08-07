@@ -78,7 +78,7 @@ function resetDomainList() {
             if(domains["domain-changer-list"] == undefined) {
                 getDomainArray = new Array();
             } else {
-                getDomainArray = domains["domain-changer-list"].split("$");
+                getDomainArray = domains["domain-changer-list"].split("$").sort();
             }
 
             getDomainArray.forEach(function(obj){
