@@ -13,6 +13,20 @@ $(document).ready(function() {
         e.stopPropagation();
         saveDomain();
     });
+
+    $("#exportBtn").click(function(e){
+        e.stopPropagation();
+        exportDomainList();
+    });
+
+    $("#importBtn").click(function(e){
+        e.stopPropagation();
+        $("#importFile").click();
+    });
+
+    $("#importFile").change(function(e){
+        importDomainList(e.target.files[0]);
+    });
 });
 
 function attachEvent(){
@@ -100,7 +114,7 @@ function removeDomain(targetDomain) {
             var getDomainArray = domains["domain-changer-list"].split("$");
 
             if(getDomainArray.length < 2) {
-                showAlert("Faild : at least 1 domain");
+                showAlert("Failed: at least 1 domain");
                 return;
             }
 
@@ -142,4 +156,43 @@ function showAlert(message){
         $("#alert").hide("slow");
         $("#alert .alert-info").text("");
     }, 2000);
+}
+
+function exportDomainList() {
+    chrome.storage.sync.get("domain-changer-list", function(domains) {
+        if (!chrome.runtime.error && domains["domain-changer-list"]) {
+            var domainList = domains["domain-changer-list"].split("$").sort();
+            var blob = new Blob([domainList.join("\n")], { type: 'text/plain' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'domain-list.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } else {
+            showAlert("Error: No domains to export");
+        }
+    });
+}
+
+function importDomainList(file) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var contents = e.target.result;
+        var importedDomains = contents.split("\n").map(line => line.trim()).filter(line => line.length > 0);
+        chrome.storage.sync.get("domain-changer-list", function(domains) {
+            if (!chrome.runtime.error) {
+                var existingDomains = domains["domain-changer-list"] ? domains["domain-changer-list"].split("$") : [];
+                var combinedDomains = existingDomains.concat(importedDomains);
+                var uniqueDomains = [...new Set(combinedDomains)];
+                chrome.storage.sync.set({"domain-changer-list": uniqueDomains.join("$")}, function() {
+                    resetDomainList();
+                    showAlert("Domain list imported");
+                });
+            }
+        });
+    };
+    reader.readAsText(file);
 }
